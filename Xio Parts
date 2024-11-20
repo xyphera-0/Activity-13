@@ -1,0 +1,72 @@
+////////////////////////////////////////////////////////////////////////
+//** ENGR-2350 Template Project 
+//** NAME: Xiomara Pelaez Cuacua
+//** RIN: 662068537
+//** This is the base project for several activities and labs throughout
+//** the course.  The outline provided below isn't necessarily *required*
+//** by a C program; however, this format is required within ENGR-2350
+//** to ease debugging/grading by the staff.
+////////////////////////////////////////////////////////////////////////
+
+// We'll always add this include statement. This basically takes the
+// code contained within the "engr_2350_msp432.h" file and adds it here.
+#include "engr2350_msp432.h"
+
+// Add function prototypes here as needed.
+void GPIO_Init();
+void I2CInit();
+// Add global variables here as needed.
+eUSCI_I2C_MasterConfig i2c;
+uint8_t compass[];
+uint16_t readCompass();
+uint16_t compassHeading;
+uint16_t readRanger();
+uint16_t compassRange;
+uint8_t range[];
+
+int main( void ) {    /** Main Function ****/
+  
+    // Add local variables here as needed.
+
+    // We always call the SysInit function first to set up the 
+    // microcontroller for how we are going to use it.
+    SysInit();
+    GPIO_Init();
+    I2CInit();
+
+    // Place initialization code (or run-once) code here
+
+    while( 1 ) {  
+        // Place code that runs continuously in here
+        printf("Compass: %4u\r\n",readCompass());
+        __delay_cycles(2.4e6); // Wait 1/10 of a second
+    }   
+}    /** End Main Function ****/   
+
+// Add function declarations here as needed
+void GPIO_Init(){
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P6, GPIO_PIN6, GPIO_SECONDARY_MODULE_FUNCTION);
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P6, GPIO_PIN7, GPIO_SECONDARY_MODULE_FUNCTION);
+}
+
+void I2CInit(){
+    i2c.selectClockSource = EUSCI_B_I2C_CLOCKSOURCE_SMCLK;
+    i2c.i2cClk = 24;
+    i2c.dataRate = EUSCI_B_I2C_SET_DATA_RATE_100KBPS;
+    i2c.byteCounterThreshold = 0;
+    i2c.autoSTOPGeneration = EUSCI_B_I2C_NO_AUTO_STOP;
+
+    I2C_initMaster(EUSCI_B3_BASE , &i2c);
+}
+uint16_t readCompass(){
+    I2C_readData(EUSCI_B3_BASE, 0x60, 2, compass, 2);
+    compassHeading = (compass[0]<<8) + (compass[1]) ;
+    return compassHeading;
+}
+// Add interrupt functions last so they are easy to find
+uint16_t readRanger(){
+    I2C_readData(EUSCI_B3_BASE, 0x70, 2, compass, 2);
+    compassRange = (range[0]<<8) + (range[1]);
+    I2C_writeData(EUSCI_B3_BASE, 0x51, 0, range, 2);
+    return compassRange;
+}
