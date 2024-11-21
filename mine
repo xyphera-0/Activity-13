@@ -46,7 +46,7 @@ int main( void ) {    /** Main Function ****/
 //        printf("Compass: %4u\r\n",readCompass());
 //        __delay_cycles(2.4e6); // Wait 1/10 of a second
         readCompass();
-        //readRanger();
+        readRanger();
         printf("Compass: %4u\tRanger: %4u\r\n",compassHeading,compassRange);
           __delay_cycles(2.4e6); // Wait 1/10 of a second
     }   
@@ -78,10 +78,11 @@ uint16_t readCompass(){
 }
 uint16_t readRanger(){
     printf("starting to read ranger data\r\n");
-    I2C_readData(EUSCI_B3_BASE, 0x70, 2, compass, 2);
+    I2C_readData(EUSCI_B3_BASE, 0x70, 4, range, 2);
     compassRange = (range[0]<<8) + (range[1]);
-    //printf("rangerheading: %u \r\n", compassRange);
-    I2C_writeData(EUSCI_B3_BASE, 0x51, 0, range, 2);
+    printf("rangerheading: %u, %u \r\n", range[1],range[0]);
+    uint8_t a[1]={0x51};
+    I2C_writeData(EUSCI_B3_BASE, 0x70, 0, a, 1);
     return compassRange;
 }
 
